@@ -40,13 +40,19 @@ func (c *Client) Execute() error {
 	if err != nil {
 		return err
 	}
-	id := job.Id
-	status := job.Status
+	err = c.await(job)
+
+	return err
+}
+
+func (c *Client) await(created *Job) error {
+	id := created.Id
+	status := created.Status
 
 	c.spinner.msg = fmt.Sprintf("Converting %s %s", id, status)
 	ticks := time.Tick(5 * time.Second)
 	for range ticks {
-		job, err = getJob(id)
+		job, err := getJob(id)
 		if err != nil {
 			return err
 		}
@@ -65,7 +71,6 @@ func (c *Client) Execute() error {
 			log.Fatalf("Illegal state: %s", job.Status)
 		}
 	}
-
 	return nil
 }
 
