@@ -1,12 +1,12 @@
 package main
 
 type Create struct {
-	Transtype *string `json:"transtype"`
-	Input     *string `json:"input"`
-	Output    *string `json:"output"`
+	Transtype *[]string `json:"transtype"`
+	Input     *string   `json:"input"`
+	Output    *string   `json:"output"`
 }
 
-func NewCreate(transtype string, input string, output string) *Create {
+func NewCreate(transtype []string, input string, output string) *Create {
 	var o *string
 	if len(output) == 0 {
 		o = &output

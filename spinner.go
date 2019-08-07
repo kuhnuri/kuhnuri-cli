@@ -20,7 +20,7 @@ func NewSpinner(msg string) *Spinner {
 		states: []string{"⣾", "⣽", "⣻", "⢿", "⡿", "⣟", "⣯", "⣷"},
 		state:  -1,
 		ticker: time.NewTicker(time.Millisecond * 100),
-		stop: make(chan bool, 1),
+		stop:   make(chan bool, 1),
 	}
 	go spinner.run()
 	return spinner
