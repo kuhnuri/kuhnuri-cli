@@ -1,4 +1,4 @@
-package main
+package spinner
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 )
 
 type Spinner struct {
-	msg     string
+	Msg     string
 	states  []string
 	state   int
 	ticker  *time.Ticker
@@ -14,9 +14,9 @@ type Spinner struct {
 	stop    chan bool
 }
 
-func NewSpinner(msg string) *Spinner {
+func New(msg string) *Spinner {
 	spinner := &Spinner{
-		msg:    msg,
+		Msg:    msg,
 		states: []string{"⣾", "⣽", "⣻", "⢿", "⡿", "⣟", "⣯", "⣷"},
 		state:  -1,
 		ticker: time.NewTicker(time.Millisecond * 100),
@@ -31,9 +31,9 @@ func (s *Spinner) run() {
 	for {
 		select {
 		case <-s.ticker.C:
-			fmt.Printf("\r%s %s", s.msg, s.next())
+			fmt.Printf("\r%s %s", s.Msg, s.next())
 		case <-s.stop:
-			fmt.Printf("\r%s %s\n", s.msg, "✓")
+			fmt.Printf("\r%s %s\n", s.Msg, "✓")
 			return
 		}
 	}
