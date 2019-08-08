@@ -31,17 +31,20 @@ func (c *Client) Execute() error {
 	c.spinner = spinner.New("Running")
 	var in string
 	if isLocal(c.input) {
-		c.spinner.Message("Collecting")
-		zip, err := createPackage()
+		c.spinner.Message(fmt.Sprintf("Packaging %s", c.input))
+		zip, err := createPackage(c.input)
 		if err != nil {
-			return err
+			return fmt.Errorf("Failed to package source: %v", err)
 		}
 		c.spinner.Message("Uploading")
 		upload, err := getUpload()
 		if err != nil {
-			return err
+			return fmt.Errorf("Failed to retrieve upload URL: %v", err)
 		}
-		doUpload(zip, upload.Upload)
+		err = doUpload(zip, upload.Upload)
+		if err != nil {
+			return fmt.Errorf("Failed to upload source: %v", err)
+		}
 		in = upload.Url
 	} else {
 		in = c.input
@@ -50,7 +53,7 @@ func (c *Client) Execute() error {
 	create := models.NewCreate([]string{c.transtype}, in, c.output)
 	job, err := doCreate(create)
 	if err != nil {
-		return err
+		return fmt.Errorf("Failed to submit conversion: %v", err)
 	}
 	err = c.await(job)
 
@@ -92,14 +95,13 @@ func isLocal(in string) bool {
 
 func (c *Client) await(created *models.Job) error {
 	id := created.Id
-	status := created.Status
 
 	c.spinner.Message(fmt.Sprintf("Converting %s", id))
 	ticks := time.Tick(5 * time.Second)
 	for range ticks {
 		job, err := getJob(id)
 		if err != nil {
-			return err
+			return fmt.Errorf("Failed to retrieve state: %v", err)
 		}
 		switch job.Status {
 		case "queue":
@@ -119,12 +121,12 @@ func (c *Client) await(created *models.Job) error {
 	return nil
 }
 
-func createPackage() (string, error) {
+func createPackage(in string) (string, error) {
 	out, err := ioutil.TempFile("", "*.zip")
 	if err != nil {
 		return "", err
 	}
-	return out.Name(), kuhnuri.Zip(out.Name(), "inputdir")
+	return out.Name(), kuhnuri.Zip(out.Name(), in)
 }
 
 func doCreate(create *models.Create) (*models.Job, error) {
@@ -195,7 +197,7 @@ func doUpload(zip string, url string) error {
 	if err != nil {
 		return err
 	}
-	resp, err := http.Post(url, "image/jpeg", buf)
+	resp, err := http.Post(url, "application/octet-stream", buf)
 	defer resp.Body.Close()
 	return err
 }
