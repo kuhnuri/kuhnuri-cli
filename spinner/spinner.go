@@ -42,7 +42,7 @@ func (s *Spinner) run() {
 }
 
 func (s *Spinner) Message(msg string) {
-	diff := len(msg) - len(s.msg)
+	diff := len(s.msg) - len(msg)
 	if diff > 0 {
 		s.clean = strings.Repeat(" ", diff)
 	} else {
