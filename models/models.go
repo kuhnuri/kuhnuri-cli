@@ -1,4 +1,4 @@
-package main
+package models
 
 type Create struct {
 	Transtype *[]string `json:"transtype"`

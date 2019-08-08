@@ -1,10 +1,11 @@
-package main
+package client
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
 	kuhnuri "github.com/kuhnuri/go-worker"
+	"github.com/kuhnuri/kuhnuri-cli/models"
 	"github.com/kuhnuri/kuhnuri-cli/spinner"
 	"io/ioutil"
 	"log"
@@ -21,6 +22,10 @@ type Client struct {
 	spinner   *spinner.Spinner
 }
 
+func New(transtype string, input string, output string) *Client {
+	return &Client{transtype, input, output, nil}
+}
+
 func (c *Client) Execute() error {
 	c.spinner = spinner.New("Collecting")
 	zip, err := createPackage()
@@ -35,7 +40,7 @@ func (c *Client) Execute() error {
 	doUpload(zip, upload.Upload)
 
 	c.spinner.Msg = "Submitting"
-	create := NewCreate([]string{c.transtype}, upload.Url, c.output)
+	create := models.NewCreate([]string{c.transtype}, upload.Url, c.output)
 	job, err := doCreate(create)
 	if err != nil {
 		return err
@@ -45,7 +50,7 @@ func (c *Client) Execute() error {
 	return err
 }
 
-func (c *Client) await(created *Job) error {
+func (c *Client) await(created *models.Job) error {
 	id := created.Id
 	status := created.Status
 
@@ -82,7 +87,7 @@ func createPackage() (string, error) {
 	return out.Name(), kuhnuri.Zip(out.Name(), "inputdir")
 }
 
-func doCreate(create *Create) (*Job, error) {
+func doCreate(create *models.Create) (*models.Job, error) {
 	b, err := json.Marshal(create)
 	if err != nil {
 		return nil, err
@@ -96,7 +101,7 @@ func doCreate(create *Create) (*Job, error) {
 	if err != nil {
 		return nil, err
 	}
-	var res Job
+	var res models.Job
 	err = json.Unmarshal(body, &res)
 	if err != nil {
 		return nil, err
@@ -104,7 +109,7 @@ func doCreate(create *Create) (*Job, error) {
 	return &res, nil
 }
 
-func getJob(id string) (*Job, error) {
+func getJob(id string) (*models.Job, error) {
 	s := api("job", id)
 	resp, err := http.Get(s)
 	if err != nil {
@@ -115,7 +120,7 @@ func getJob(id string) (*Job, error) {
 	if err != nil {
 		return nil, err
 	}
-	var res Job
+	var res models.Job
 	err = json.Unmarshal(body, &res)
 	if err != nil {
 		return nil, err
@@ -123,7 +128,7 @@ func getJob(id string) (*Job, error) {
 	return &res, nil
 }
 
-func getUpload() (*Upload, error) {
+func getUpload() (*models.Upload, error) {
 	resp, err := http.Get(api("upload"))
 	if err != nil {
 		return nil, err
@@ -133,7 +138,7 @@ func getUpload() (*Upload, error) {
 	if err != nil {
 		return nil, err
 	}
-	var res Upload
+	var res models.Upload
 	err = json.Unmarshal(body, &res)
 	if err != nil {
 		return nil, err

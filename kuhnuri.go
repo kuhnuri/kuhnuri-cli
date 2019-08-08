@@ -1,7 +1,7 @@
-package main
+package client
 
 import (
-	"fmt"
+	"github.com/kuhnuri/kuhnuri-cli/client"
 	"gopkg.in/urfave/cli.v1"
 	"log"
 	"os"
@@ -36,10 +36,8 @@ func main() {
 		},
 	}
 	app.Action = func(c *cli.Context) error {
-		client := Client{transtype, input, output, nil}
-		err := client.Execute()
-		fmt.Printf("Done: %s", err)
-		return err
+		client := client.New(transtype, input, output)
+		return client.Execute()
 	}
 	err := app.Run(os.Args)
 	if err != nil {
