@@ -1,11 +1,16 @@
-package client
+package main
 
 import (
 	"github.com/kuhnuri/kuhnuri-cli/client"
 	"gopkg.in/urfave/cli.v1"
+	"io/ioutil"
 	"log"
 	"os"
 )
+
+func init() {
+	log.SetOutput(ioutil.Discard)
+}
 
 func main() {
 	var transtype string

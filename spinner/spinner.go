@@ -2,11 +2,13 @@ package spinner
 
 import (
 	"fmt"
+	"strings"
 	"time"
 )
 
 type Spinner struct {
-	Msg     string
+	msg     string
+	clean   string
 	states  []string
 	state   int
 	ticker  *time.Ticker
@@ -16,8 +18,8 @@ type Spinner struct {
 
 func New(msg string) *Spinner {
 	spinner := &Spinner{
-		Msg:    msg,
-		states: []string{"⣾", "⣽", "⣻", "⢿", "⡿", "⣟", "⣯", "⣷"},
+		msg:    msg,
+		states: []string{"⣷", "⣯", "⣟", "⡿", "⢿", "⣻", "⣽", "⣾"},
 		state:  -1,
 		ticker: time.NewTicker(time.Millisecond * 100),
 		stop:   make(chan bool, 1),
@@ -31,21 +33,26 @@ func (s *Spinner) run() {
 	for {
 		select {
 		case <-s.ticker.C:
-			fmt.Printf("\r%s %s", s.Msg, s.next())
+			fmt.Printf("\r%s %s%s", s.msg, s.next(), s.clean)
 		case <-s.stop:
-			fmt.Printf("\r%s %s\n", s.Msg, "✓")
+			fmt.Printf("\r%s %s%s\n", s.msg, "✓", s.clean)
 			return
 		}
 	}
 }
 
-func (s *Spinner) erase() {
-
+func (s *Spinner) Message(msg string) {
+	diff := len(msg) - len(s.msg)
+	if diff > 0 {
+		s.clean = strings.Repeat(" ", diff)
+	} else {
+		s.clean = ""
+	}
+	s.msg = msg
 }
 
 func (s *Spinner) Stop() {
 	close(s.stop)
-
 }
 
 func (s *Spinner) next() string {

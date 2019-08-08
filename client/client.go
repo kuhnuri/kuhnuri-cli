@@ -8,9 +8,10 @@ import (
 	"github.com/kuhnuri/kuhnuri-cli/models"
 	"github.com/kuhnuri/kuhnuri-cli/spinner"
 	"io/ioutil"
-	"log"
 	"net/http"
+	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -27,34 +28,73 @@ func New(transtype string, input string, output string) *Client {
 }
 
 func (c *Client) Execute() error {
-	c.spinner = spinner.New("Collecting")
-	zip, err := createPackage()
-	if err != nil {
-		return err
+	c.spinner = spinner.New("Running")
+	var in string
+	if isLocal(c.input) {
+		c.spinner.Message("Collecting")
+		zip, err := createPackage()
+		if err != nil {
+			return err
+		}
+		c.spinner.Message("Uploading")
+		upload, err := getUpload()
+		if err != nil {
+			return err
+		}
+		doUpload(zip, upload.Upload)
+		in = upload.Url
+	} else {
+		in = c.input
 	}
-	c.spinner.Msg = "Uploading"
-	upload, err := getUpload()
-	if err != nil {
-		return err
-	}
-	doUpload(zip, upload.Upload)
-
-	c.spinner.Msg = "Submitting"
-	create := models.NewCreate([]string{c.transtype}, upload.Url, c.output)
+	c.spinner.Message("Submitting")
+	create := models.NewCreate([]string{c.transtype}, in, c.output)
 	job, err := doCreate(create)
 	if err != nil {
 		return err
 	}
 	err = c.await(job)
 
+	if !isExternal(c.output) {
+		c.spinner.Message("Downloading")
+		//dst, err := doDownload(job.Output)
+	}
+
+	c.spinner.Stop()
+
 	return err
+}
+
+func isExternal(in string) bool {
+	url, err := url.Parse(in)
+	if err != nil {
+		return false
+	}
+	if !url.IsAbs() {
+		return false
+	}
+	if url.Scheme == "file" {
+		return false
+	}
+	return true
+}
+
+func isLocal(in string) bool {
+	abs, err := filepath.Abs(in)
+	if err != nil {
+		return false
+	}
+	_, err = os.Stat(abs)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return true
 }
 
 func (c *Client) await(created *models.Job) error {
 	id := created.Id
 	status := created.Status
 
-	c.spinner.Msg = fmt.Sprintf("Converting %s %s", id, status)
+	c.spinner.Message(fmt.Sprintf("Converting %s", id))
 	ticks := time.Tick(5 * time.Second)
 	for range ticks {
 		job, err := getJob(id)
@@ -63,17 +103,17 @@ func (c *Client) await(created *models.Job) error {
 		}
 		switch job.Status {
 		case "queue":
-			fallthrough
+			c.spinner.Message(fmt.Sprintf("Queuing %s", id))
 		case "process":
-			c.spinner.Msg = fmt.Sprintf("Converting %s %s", id, job.Status)
+			c.spinner.Message(fmt.Sprintf("Converting %s", id))
 			break
 		case "done":
-			fallthrough
+			c.spinner.Message(fmt.Sprintf("Done %s", id))
 		case "error":
-			c.spinner.Stop()
+			c.spinner.Message(fmt.Sprintf("Failed %s", id))
 			return nil
 		default:
-			log.Fatalf("Illegal state: %s", job.Status)
+			panic(fmt.Sprintf("Illegal state: %s", job.Status))
 		}
 	}
 	return nil
