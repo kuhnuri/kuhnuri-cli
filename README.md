@@ -25,4 +25,4 @@ Support this project and others by [@jelovirt](https://github.com/jelovirt) via 
 
 ## License
 
-AWS Batch based DITA-OT is licensed for use under the [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0).
+Kuhnuri AWS CLI is licensed for use under the [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0).
