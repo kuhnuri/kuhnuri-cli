@@ -22,4 +22,5 @@ type Upload struct {
 type Job struct {
 	Id     string `json:"id"`
 	Status string `json:"status"`
+	Output string `json:"output"`
 }

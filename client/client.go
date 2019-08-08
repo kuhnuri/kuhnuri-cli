@@ -29,6 +29,7 @@ func New(transtype string, input string, output string) *Client {
 
 func (c *Client) Execute() error {
 	c.spinner = spinner.New("Running")
+	defer c.spinner.Stop()
 	var in string
 	if isLocal(c.input) {
 		c.spinner.Message(fmt.Sprintf("Packaging %s", c.input))
@@ -56,15 +57,20 @@ func (c *Client) Execute() error {
 		return fmt.Errorf("Failed to submit conversion: %v", err)
 	}
 	err = c.await(job)
-
+	if err != nil {
+		return err
+	}
 	if !isExternal(c.output) {
-		c.spinner.Message("Downloading")
-		//dst, err := doDownload(job.Output)
+		c.spinner.Message(fmt.Sprintf("Downloading %s", job.Output))
+		dst, err := doDownload(job.Output)
+		if err != nil {
+			return fmt.Errorf("Failed to download results: %v", err)
+		}
+		c.spinner.Message(fmt.Sprintf("Unpackaging %s", dst))
+		kuhnuri.Unzip(dst, c.output)
 	}
 
-	c.spinner.Stop()
-
-	return err
+	return nil
 }
 
 func isExternal(in string) bool {
@@ -93,6 +99,25 @@ func isLocal(in string) bool {
 	return true
 }
 
+func doDownload(in string) (string, error) {
+	// if S3, get download URL
+	//out, err := ioutil.TempFile("", "*.zip")
+	//if err != nil {
+	//	return "", err
+	//}
+	//s := api("job", id)
+	//resp, err := http.Get(s)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//defer resp.Body.Close()
+	//body, err := ioutil.ReadAll(resp.Body)
+	//if err != nil {
+	//	return nil, err
+	//}
+	return "", nil
+}
+
 func (c *Client) await(created *models.Job) error {
 	id := created.Id
 
@@ -111,9 +136,10 @@ func (c *Client) await(created *models.Job) error {
 			break
 		case "done":
 			c.spinner.Message(fmt.Sprintf("Done %s", id))
+			return nil
 		case "error":
 			c.spinner.Message(fmt.Sprintf("Failed %s", id))
-			return nil
+			return fmt.Errorf("Failed")
 		default:
 			panic(fmt.Sprintf("Illegal state: %s", job.Status))
 		}
