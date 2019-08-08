@@ -2,20 +2,25 @@ package main
 
 import (
 	"github.com/kuhnuri/kuhnuri-cli/client"
+	"github.com/kuhnuri/kuhnuri-cli/config"
 	"gopkg.in/urfave/cli.v1"
 	"io/ioutil"
 	"log"
 	"os"
 )
 
+var conf config.Config
+
 func init() {
 	log.SetOutput(ioutil.Discard)
+	conf = config.Read()
 }
 
 func main() {
 	var transtype string
 	var input string
 	var output string
+	var api string
 
 	app := cli.NewApp()
 	app.Name = "kuhnuri"
@@ -39,10 +44,25 @@ func main() {
 			Usage:       "Output file, directory, or URL",
 			Destination: &output,
 		},
+		cli.StringFlag{
+			Name:        "api",
+			Usage:       "Kuhnuri API URL",
+			Destination: &api,
+		},
 	}
 	app.Action = func(c *cli.Context) error {
-		client := client.New(transtype, input, output)
-		return client.Execute()
+		if len(api) != 0 {
+			conf["api"] = api
+		}
+		client, err := client.New(conf, transtype, input, output)
+		if err != nil {
+			return cli.NewExitError("ERROR: "+err.Error(), 1)
+		}
+		err = client.Execute()
+		if err != nil {
+			return cli.NewExitError("ERROR: "+err.Error(), 1)
+		}
+		return nil
 	}
 	err := app.Run(os.Args)
 	if err != nil {

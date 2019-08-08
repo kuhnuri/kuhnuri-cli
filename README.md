@@ -7,7 +7,7 @@ Kuhnuri command line tool to run conversions in AWS.
 Requires a running [Kuhnuri environment](https://github.com/kuhnuri/kuhnuri-cdk).
 
 ```bash
-$ kuhnuri -i INPUT -t TRANSTYPE [-o OUTPUT]
+$ kuhnuri -i INPUT -t TRANSTYPE [-o OUTPUT] [--api API]
 ```
 
 <dl>
@@ -17,7 +17,15 @@ $ kuhnuri -i INPUT -t TRANSTYPE [-o OUTPUT]
   <dd>Transtype name</dd>
   <dt><code>OUTPUT</code></dt>
   <dd>Output URL or local file. Optional</dd>
-</dl>  
+  <dt><code>API</code></dt>
+  <dd>Kuhnuri API URL. Optional</dd>
+</dl>
+
+Kuhnuri API URL can be configured in `.kuhnurirc` file
+
+```properties
+api = https://example.com/
+```
 
 ## Donating
 

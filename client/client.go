@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	kuhnuri "github.com/kuhnuri/go-worker"
+	"github.com/kuhnuri/kuhnuri-cli/config"
 	"github.com/kuhnuri/kuhnuri-cli/models"
 	"github.com/kuhnuri/kuhnuri-cli/spinner"
 	"io/ioutil"
@@ -17,14 +18,18 @@ import (
 )
 
 type Client struct {
+	base      string
 	transtype string
 	input     string
 	output    string
 	spinner   *spinner.Spinner
 }
 
-func New(transtype string, input string, output string) *Client {
-	return &Client{transtype, input, output, nil}
+func New(conf config.Config, transtype string, input string, output string) (*Client, error) {
+	if _, ok := conf["api"]; !ok {
+		return nil, fmt.Errorf("API base URL not configured\n")
+	}
+	return &Client{conf["api"], transtype, input, output, nil}, nil
 }
 
 func (c *Client) Execute() error {
@@ -38,7 +43,7 @@ func (c *Client) Execute() error {
 			return fmt.Errorf("Failed to package source: %v", err)
 		}
 		c.spinner.Message("Uploading")
-		upload, err := getUpload()
+		upload, err := c.getUpload()
 		if err != nil {
 			return fmt.Errorf("Failed to retrieve upload URL: %v", err)
 		}
@@ -52,7 +57,7 @@ func (c *Client) Execute() error {
 	}
 	c.spinner.Message("Submitting")
 	create := models.NewCreate([]string{c.transtype}, in, c.output)
-	job, err := doCreate(create)
+	job, err := c.doCreate(create)
 	if err != nil {
 		return fmt.Errorf("Failed to submit conversion: %v", err)
 	}
@@ -124,7 +129,7 @@ func (c *Client) await(created *models.Job) error {
 	c.spinner.Message(fmt.Sprintf("Converting %s", id))
 	ticks := time.Tick(5 * time.Second)
 	for range ticks {
-		job, err := getJob(id)
+		job, err := c.getJob(id)
 		if err != nil {
 			return fmt.Errorf("Failed to retrieve state: %v", err)
 		}
@@ -155,12 +160,12 @@ func createPackage(in string) (string, error) {
 	return out.Name(), kuhnuri.Zip(out.Name(), in)
 }
 
-func doCreate(create *models.Create) (*models.Job, error) {
+func (c *Client) doCreate(create *models.Create) (*models.Job, error) {
 	b, err := json.Marshal(create)
 	if err != nil {
 		return nil, err
 	}
-	resp, err := http.Post(api("job"), "application/zip", bytes.NewReader(b))
+	resp, err := http.Post(c.api("job"), "application/zip", bytes.NewReader(b))
 	if err != nil {
 		return nil, err
 	}
@@ -177,9 +182,8 @@ func doCreate(create *models.Create) (*models.Job, error) {
 	return &res, nil
 }
 
-func getJob(id string) (*models.Job, error) {
-	s := api("job", id)
-	resp, err := http.Get(s)
+func (c *Client) getJob(id string) (*models.Job, error) {
+	resp, err := http.Get(c.api("job", id))
 	if err != nil {
 		return nil, err
 	}
@@ -196,8 +200,8 @@ func getJob(id string) (*models.Job, error) {
 	return &res, nil
 }
 
-func getUpload() (*models.Upload, error) {
-	resp, err := http.Get(api("upload"))
+func (c *Client) getUpload() (*models.Upload, error) {
+	resp, err := http.Get(c.api("upload"))
 	if err != nil {
 		return nil, err
 	}
@@ -214,8 +218,8 @@ func getUpload() (*models.Upload, error) {
 	return &res, nil
 }
 
-func api(path ...string) string {
-	return fmt.Sprintf("https://3wfsdjcsf2.execute-api.eu-west-1.amazonaws.com/prod/api/v1/%s", strings.Join(path, "/"))
+func (c *Client) api(path ...string) string {
+	return fmt.Sprintf("%s/%s", c.base, strings.Join(path, "/"))
 }
 
 func doUpload(zip string, url string) error {
