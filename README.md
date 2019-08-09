@@ -2,6 +2,12 @@
 
 Kuhnuri command line tool to run conversions in AWS.
 
+# Installing
+
+```bash
+$ go install github.com/kuhnuri/kuhnuri-cli/kuhnuri
+```
+
 ## Usage
 
 Requires a running [Kuhnuri environment](https://github.com/kuhnuri/kuhnuri-cdk).
@@ -21,11 +27,15 @@ $ kuhnuri -i INPUT -t TRANSTYPE [-o OUTPUT] [--api API]
   <dd>Kuhnuri API URL. Optional</dd>
 </dl>
 
-Kuhnuri API URL can be configured in `.kuhnurirc` file
+## Configuration
+
+Default options can be configured in `.kuhnurirc` file
 
 ```properties
 api = https://example.com/
 ```
+
+The configuration file is read from either current directory or user home directory.
 
 ## Donating
 
