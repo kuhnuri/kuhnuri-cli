@@ -42,6 +42,10 @@ func (s *Spinner) run() {
 }
 
 func (s *Spinner) Message(msg string) {
+	if s.msg == msg {
+		return
+	}
+	fmt.Printf("\r%s %s%s\n", s.msg, "✓", s.clean)
 	diff := len(s.msg) - len(msg)
 	if diff > 0 {
 		s.clean = strings.Repeat(" ", diff)

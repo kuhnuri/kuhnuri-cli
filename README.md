@@ -2,7 +2,7 @@
 
 Kuhnuri command line tool to run conversions in AWS.
 
-# Installing
+## Installing
 
 ```bash
 $ go install github.com/kuhnuri/kuhnuri-cli/kuhnuri
@@ -22,10 +22,14 @@ $ kuhnuri -i INPUT -t TRANSTYPE [-o OUTPUT] [--api API]
   <dt><code>TRANSTYPE</code></dt>
   <dd>Transtype name</dd>
   <dt><code>OUTPUT</code></dt>
-  <dd>Output URL or local file. Optional</dd>
+  <dd>Output URL or local directory. Optional</dd>
   <dt><code>API</code></dt>
   <dd>Kuhnuri API URL. Optional</dd>
 </dl>
+
+If `INPUT` is a local directory, contents of the directory is zipped and uploaded to a temporary AWS S3 resource.
+ 
+If `OUTPUT` is a local directory, the output ZIP will be uploaded and extracted there.
 
 ## Configuration
 

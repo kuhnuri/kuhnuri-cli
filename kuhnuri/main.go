@@ -26,6 +26,7 @@ func main() {
 	app.Name = "kuhnuri"
 	app.Version = "0.1.0"
 	app.Usage = "Run DITA-OT on the cloud"
+	app.Author = "Jarno Elovirta <jarno@elovirta.com>"
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
 			Name:        "t, transtype",
@@ -47,6 +48,7 @@ func main() {
 		cli.StringFlag{
 			Name:        "api",
 			Usage:       "Kuhnuri API URL",
+			Value:       conf["api"],
 			Destination: &api,
 		},
 	}
