@@ -79,7 +79,7 @@ func (c *Client) download(id string) error {
 	if err != nil {
 		return fmt.Errorf("Failed to download results: %v", err)
 	}
-	c.spinner.Message(fmt.Sprintf("Unpackaging %s", dst))
+	c.spinner.Message(fmt.Sprintf("Unpackaging"))
 	file := toPath(c.output)
 	err = kuhnuri.MkDirs(file)
 	if err != nil {
@@ -207,16 +207,16 @@ func (c *Client) await(created *models.Job) error {
 		}
 		switch job.Status {
 		case "queue":
-			c.spinner.Message(fmt.Sprintf("Queuing %s", id))
+			c.spinner.Message(fmt.Sprintf("Queuing"))
 		case "process":
-			c.spinner.Message(fmt.Sprintf("Converting %s", id))
+			c.spinner.Message(fmt.Sprintf("Converting"))
 			break
 		case "done":
 			//c.spinner.Message(fmt.Sprintf("Done %s", id))
 			return nil
 		case "error":
 			//c.spinner.Message(fmt.Sprintf("Failed %s", id))
-			return fmt.Errorf("Failed")
+			return fmt.Errorf("Failed %s", id)
 		default:
 			panic(fmt.Sprintf("Illegal state: %s", job.Status))
 		}
