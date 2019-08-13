@@ -56,7 +56,15 @@ func main() {
 		if len(api) != 0 {
 			conf["api"] = api
 		}
-		client, err := client.New(conf, transtype, input, output)
+		i, err := toUrl(input)
+		if err != nil {
+			return cli.NewExitError("ERROR: "+err.Error(), 1)
+		}
+		o, err := toUrl(output)
+		if err != nil {
+			return cli.NewExitError("ERROR: "+err.Error(), 1)
+		}
+		client, err := client.New(conf, transtype, i, o)
 		if err != nil {
 			return cli.NewExitError("ERROR: "+err.Error(), 1)
 		}

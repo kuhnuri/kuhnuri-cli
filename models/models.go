@@ -1,17 +1,20 @@
 package models
 
+import "net/url"
+
 type Create struct {
 	Transtype *[]string `json:"transtype"`
 	Input     *string   `json:"input"`
 	Output    *string   `json:"output"`
 }
 
-func NewCreate(transtype []string, input string, output string) *Create {
-	var o *string
-	if len(output) == 0 {
-		o = &output
+func NewCreate(transtype []string, input *url.URL, output *url.URL) *Create {
+	var o string
+	if output == nil {
+		o = output.String()
 	}
-	return &Create{&transtype, &input, o}
+	i := input.String()
+	return &Create{&transtype, &i, &o}
 }
 
 type Upload struct {

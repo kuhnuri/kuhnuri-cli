@@ -21,12 +21,12 @@ import (
 type Client struct {
 	base      string
 	transtype string
-	input     string
-	output    string
+	input     *url.URL
+	output    *url.URL
 	spinner   *spinner.Spinner
 }
 
-func New(conf config.Config, transtype string, input string, output string) (*Client, error) {
+func New(conf config.Config, transtype string, input *url.URL, output *url.URL) (*Client, error) {
 	if _, ok := conf["api"]; !ok {
 		return nil, fmt.Errorf("API base URL not configured\n")
 	}
@@ -41,7 +41,7 @@ func New(conf config.Config, transtype string, input string, output string) (*Cl
 func (c *Client) Execute() error {
 	c.spinner = spinner.New("Running")
 	defer c.spinner.Stop()
-	var in string
+	var in *url.URL
 	if isLocal(c.input) {
 		var err error
 		in, err = c.upload()
@@ -80,29 +80,31 @@ func (c *Client) download(id string) (error) {
 		return fmt.Errorf("Failed to download results: %v", err)
 	}
 	c.spinner.Message(fmt.Sprintf("Unpackaging %s", dst))
-	err = kuhnuri.MkDirs(c.output)
+	file := toPath(c.output)
+	err = kuhnuri.MkDirs(file)
 	if err != nil {
 		return err
 	}
-	err = kuhnuri.Unzip(dst, c.output)
+	err = kuhnuri.Unzip(dst, file)
 	if err != nil {
 		return fmt.Errorf("Failed to unpackage %s: %v", dst, err)
 	}
 	return nil
 }
 
-func (c *Client) upload() (string, error) {
-	stat, err := os.Stat(c.input)
+func (c *Client) upload() (*url.URL, error) {
+	file := toPath(c.input)
+	stat, err := os.Stat(file)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	var dir string
 	var start string
 	if stat.IsDir() {
-		dir = c.input
-		filepath.Walk(c.input, func(path string, info os.FileInfo, err error) error {
+		dir = file
+		filepath.Walk(file, func(path string, info os.FileInfo, err error) error {
 			if filepath.Ext(path) == ".ditamap" && start == "" {
-				start, err = filepath.Rel(c.input, path)
+				start, err = filepath.Rel(file, path)
 				if err != nil {
 					return fmt.Errorf("Failed to build relative path for %s", path)
 				}
@@ -111,56 +113,63 @@ func (c *Client) upload() (string, error) {
 			return nil
 		})
 	} else {
-		dir = filepath.Dir(c.input)
-		start, err = filepath.Rel(dir, c.input)
+		file := toPath(c.input)
+		dir = filepath.Dir(file)
+		start, err = filepath.Rel(dir, file)
 		if err != nil {
-			return "", fmt.Errorf("Failed to build relative path for %s", c.input)
+			return nil, fmt.Errorf("Failed to build relative path for %s", c.input)
 		}
 	}
 	c.spinner.Message(fmt.Sprintf("Packaging"))
 	zip, err := createPackage(dir)
 	if err != nil {
-		return "", fmt.Errorf("Failed to package source: %v", err)
+		return nil, fmt.Errorf("Failed to package source: %v", err)
 	}
 	c.spinner.Message("Uploading")
 	upload, err := c.getUpload()
 	if err != nil {
-		return "", fmt.Errorf("Failed to retrieve upload URL: %v", err)
+		return nil, fmt.Errorf("Failed to retrieve upload URL: %v", err)
 	}
 	err = doUpload(zip, upload.Upload)
 	if err != nil {
-		return "", fmt.Errorf("Failed to upload source: %v", err)
+		return nil, fmt.Errorf("Failed to upload source: %v", err)
 	}
-	in := fmt.Sprintf("jar:%s!/%s", upload.Url, filepath.ToSlash(start))
+
+	in, err := url.Parse(fmt.Sprintf("jar:%s!/%s", upload.Url, filepath.ToSlash(start)))
+	if err != nil {
+		return nil, fmt.Errorf("Failed to construct URL: %v", err)
+	}
 	return in, nil
 }
 
 // Check if input argument is non-local URI resource
-func isExternal(in string) bool {
-	url, err := url.Parse(in)
-	if err != nil {
+func isExternal(in *url.URL) bool {
+	if !in.IsAbs() {
 		return false
 	}
-	if !url.IsAbs() {
-		return false
-	}
-	if url.Scheme == "file" {
+	if in.Scheme == "file" {
 		return false
 	}
 	return true
 }
 
 // Check if input argument is local URI resource
-func isLocal(in string) bool {
-	abs, err := filepath.Abs(in)
-	if err != nil {
+func isLocal(in *url.URL) bool {
+	if !in.IsAbs() {
 		return false
 	}
-	_, err = os.Stat(abs)
+	if in.Scheme != "file" {
+		return false
+	}
+	_, err := os.Stat(toPath(in))
 	if os.IsNotExist(err) {
 		return false
 	}
 	return true
+}
+
+func toPath(in *url.URL) string {
+	return filepath.FromSlash(in.Path)
 }
 
 func (c *Client) doDownload(in string) (string, error) {
