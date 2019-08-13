@@ -27,7 +27,7 @@ $ kuhnuri -i INPUT -t TRANSTYPE [-o OUTPUT] [--api API]
   <dd>Kuhnuri API URL. Optional</dd>
 </dl>
 
-If `INPUT` is a local directory, contents of the directory is zipped and uploaded to a temporary AWS S3 resource.
+If `INPUT` is a local file, contents of the parent directory is zipped and uploaded to a temporary AWS S3 resource.
  
 If `OUTPUT` is a local directory, the output ZIP will be uploaded and extracted there.
 

@@ -43,46 +43,11 @@ func (c *Client) Execute() error {
 	defer c.spinner.Stop()
 	var in string
 	if isLocal(c.input) {
-		stat, err := os.Stat(c.input)
+		var err error
+		in, err = c.upload()
 		if err != nil {
 			return err
 		}
-		var dir string
-		var start string
-		if stat.IsDir() {
-			dir = c.input
-			filepath.Walk(c.input, func(path string, info os.FileInfo, err error) error {
-				if filepath.Ext(path) == ".ditamap" && start == "" {
-					start, err = filepath.Rel(c.input, path)
-					if err != nil {
-						return fmt.Errorf("Failed to build relative path for %s", path)
-					}
-					return filepath.SkipDir
-				}
-				return nil
-			})
-		} else {
-			dir = filepath.Dir(c.input)
-			start, err = filepath.Rel(dir, c.input)
-			if err != nil {
-				return fmt.Errorf("Failed to build relative path for %s", c.input)
-			}
-		}
-		c.spinner.Message(fmt.Sprintf("Packaging"))
-		zip, err := createPackage(dir)
-		if err != nil {
-			return fmt.Errorf("Failed to package source: %v", err)
-		}
-		c.spinner.Message("Uploading")
-		upload, err := c.getUpload()
-		if err != nil {
-			return fmt.Errorf("Failed to retrieve upload URL: %v", err)
-		}
-		err = doUpload(zip, upload.Upload)
-		if err != nil {
-			return fmt.Errorf("Failed to upload source: %v", err)
-		}
-		in = fmt.Sprintf("jar:%s!/%s", upload.Url, filepath.ToSlash(start))
 	} else {
 		in = c.input
 	}
@@ -99,25 +64,78 @@ func (c *Client) Execute() error {
 	if isExternal(c.output) {
 		c.spinner.Message(fmt.Sprintf("Generated %s", job.Output))
 	} else {
-		c.spinner.Message(fmt.Sprintf("Downloading"))
-		dst, err := c.doDownload(job.Id)
-		if err != nil {
-			return fmt.Errorf("Failed to download results: %v", err)
-		}
-		c.spinner.Message(fmt.Sprintf("Unpackaging %s", dst))
-		err = kuhnuri.MkDirs(c.output)
+		err := c.download(job.Id)
 		if err != nil {
 			return err
-		}
-		err = kuhnuri.Unzip(dst, c.output)
-		if err != nil {
-			return fmt.Errorf("Failed to unpackage %s: %v", dst, err)
 		}
 	}
 
 	return nil
 }
 
+func (c *Client) download(id string) (error) {
+	c.spinner.Message(fmt.Sprintf("Downloading"))
+	dst, err := c.doDownload(id)
+	if err != nil {
+		return fmt.Errorf("Failed to download results: %v", err)
+	}
+	c.spinner.Message(fmt.Sprintf("Unpackaging %s", dst))
+	err = kuhnuri.MkDirs(c.output)
+	if err != nil {
+		return err
+	}
+	err = kuhnuri.Unzip(dst, c.output)
+	if err != nil {
+		return fmt.Errorf("Failed to unpackage %s: %v", dst, err)
+	}
+	return nil
+}
+
+func (c *Client) upload() (string, error) {
+	stat, err := os.Stat(c.input)
+	if err != nil {
+		return "", err
+	}
+	var dir string
+	var start string
+	if stat.IsDir() {
+		dir = c.input
+		filepath.Walk(c.input, func(path string, info os.FileInfo, err error) error {
+			if filepath.Ext(path) == ".ditamap" && start == "" {
+				start, err = filepath.Rel(c.input, path)
+				if err != nil {
+					return fmt.Errorf("Failed to build relative path for %s", path)
+				}
+				return filepath.SkipDir
+			}
+			return nil
+		})
+	} else {
+		dir = filepath.Dir(c.input)
+		start, err = filepath.Rel(dir, c.input)
+		if err != nil {
+			return "", fmt.Errorf("Failed to build relative path for %s", c.input)
+		}
+	}
+	c.spinner.Message(fmt.Sprintf("Packaging"))
+	zip, err := createPackage(dir)
+	if err != nil {
+		return "", fmt.Errorf("Failed to package source: %v", err)
+	}
+	c.spinner.Message("Uploading")
+	upload, err := c.getUpload()
+	if err != nil {
+		return "", fmt.Errorf("Failed to retrieve upload URL: %v", err)
+	}
+	err = doUpload(zip, upload.Upload)
+	if err != nil {
+		return "", fmt.Errorf("Failed to upload source: %v", err)
+	}
+	in := fmt.Sprintf("jar:%s!/%s", upload.Url, filepath.ToSlash(start))
+	return in, nil
+}
+
+// Check if input argument is non-local URI resource
 func isExternal(in string) bool {
 	url, err := url.Parse(in)
 	if err != nil {
@@ -132,6 +150,7 @@ func isExternal(in string) bool {
 	return true
 }
 
+// Check if input argument is local URI resource
 func isLocal(in string) bool {
 	abs, err := filepath.Abs(in)
 	if err != nil {
