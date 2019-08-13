@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/kuhnuri/kuhnuri-cli/client"
 	"github.com/kuhnuri/kuhnuri-cli/config"
-	"gopkg.in/urfave/cli.v1"
+	"github.com/urfave/cli"
 	"io/ioutil"
 	"log"
 	"os"
@@ -42,7 +42,7 @@ func main() {
 		},
 		cli.StringFlag{
 			Name:        "o, output",
-			Usage:       "Output file, directory, or URL",
+			Usage:       "Output directory or URL",
 			Destination: &output,
 		},
 		cli.StringFlag{

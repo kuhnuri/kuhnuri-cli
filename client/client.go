@@ -73,7 +73,7 @@ func (c *Client) Execute() error {
 	return nil
 }
 
-func (c *Client) download(id string) (error) {
+func (c *Client) download(id string) error {
 	c.spinner.Message(fmt.Sprintf("Downloading"))
 	dst, err := c.doDownload(id)
 	if err != nil {
