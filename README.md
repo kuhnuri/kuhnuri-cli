@@ -9,7 +9,7 @@ Requirements:
 * [Go 1.12 or newer](https://golang.org/dl/)
 
 ```bash
-$ go install github.com/kuhnuri/kuhnuri-cli/kuhnuri
+$ go get -u qgithub.com/kuhnuri/kuhnuri-cli/kuhnuri
 ```
 
 ## Usage
