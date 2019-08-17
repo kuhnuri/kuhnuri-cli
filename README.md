@@ -4,6 +4,10 @@ Kuhnuri command line tool to run conversions in AWS.
 
 ## Installing
 
+Requirements:
+
+* [Go 1.12 or newer](https://golang.org/dl/)
+
 ```bash
 $ go install github.com/kuhnuri/kuhnuri-cli/kuhnuri
 ```
@@ -39,7 +43,12 @@ Default options can be configured in `.kuhnurirc` file
 api = https://example.com/
 ```
 
-The configuration file is read from either current directory or user home directory.
+The configuration file is searched for in order:
+
+* current directory or any ancestor directory
+* user home directory
+
+The first `.kuhnurirc` file found is used.
 
 ## Donating
 

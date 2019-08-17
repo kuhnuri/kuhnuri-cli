@@ -2,6 +2,7 @@ package config
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -13,12 +14,25 @@ type Config map[string]string
 var filenames []string
 
 func init() {
-	filenames = []string{".kuhnurirc"}
+	file := ".kuhnurirc"
+	filenames = []string{}
+	dir, err := filepath.Abs(".")
+	if err != nil {
+		panic(fmt.Sprintf("Failed to get absolute path: %s", err))
+	}
+	for {
+		filenames = append(filenames, filepath.Join(dir, file))
+		parent := filepath.Dir(dir)
+		if dir == parent {
+			break
+		}
+		dir = parent
+	}
 	usr, err := user.Current()
 	if err != nil {
 		// Ignore
 	} else {
-		filenames = append(filenames, filepath.Join(usr.HomeDir, ".kuhnurirc"))
+		filenames = append(filenames, filepath.Join(usr.HomeDir, file))
 	}
 }
 
