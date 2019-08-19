@@ -26,9 +26,18 @@ type Client struct {
 	spinner   *spinner.Spinner
 }
 
-func New(conf config.Config, transtype string, input *url.URL, output *url.URL) (*Client, error) {
+func New(conf config.Config, deliverable *models.Deliverable) (*Client, error) {
+	input, err := url.Parse(deliverable.Context.Input)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to parse input: %s", input)
+	}
+	output, err := url.Parse(deliverable.Output)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to parse output: %s", output)
+	}
+	transtype := deliverable.Publication.Transtype
 	if _, ok := conf["api"]; !ok {
-		return nil, fmt.Errorf("API base URL not configured\n")
+		return nil, fmt.Errorf("API base URL not configured")
 	}
 	return &Client{
 		base:      conf["api"],
