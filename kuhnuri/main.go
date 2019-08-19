@@ -28,10 +28,14 @@ func main() {
 	app.Name = "kuhnuri"
 	app.Version = "0.1.0"
 	app.Usage = "Run DITA-OT on the cloud"
-	app.Author = "Jarno Elovirta <jarno@elovirta.com>"
+	app.Authors = []cli.Author{cli.Author{
+		Name: "Jarno Elovirta",
+		Email: "jarno@elovirta.com",
+	}}
+	app.UsageText = "kuhnuri [options...]"
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
-			Name:        "t, transtype",
+			Name:        "f, format",
 			Required:    true,
 			Usage:       "DITA-OT transtype",
 			Destination: &transtype,

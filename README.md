@@ -17,7 +17,7 @@ $ go get -u qgithub.com/kuhnuri/kuhnuri-cli/kuhnuri
 Requires a running [Kuhnuri environment](https://github.com/kuhnuri/kuhnuri-cdk).
 
 ```bash
-$ kuhnuri -i INPUT -t TRANSTYPE [-o OUTPUT] [--api API]
+$ kuhnuri -i INPUT -f TRANSTYPE [-o OUTPUT] [--api API]
 ```
 
 <dl>
