@@ -19,12 +19,18 @@ Requires a running [Kuhnuri environment](https://github.com/kuhnuri/kuhnuri-cdk)
 ```bash
 $ kuhnuri -i INPUT -f TRANSTYPE [-o OUTPUT] [--api API]
 ```
+or
+```bash
+$ kuhnuri -p PROJECT [-o OUTPUT] [--api API]
+``` 
 
 <dl>
   <dt><code>INPUT</code></dt>
   <dd>Input URL or local file</dd>
   <dt><code>TRANSTYPE</code></dt>
   <dd>Transtype name</dd>
+  <dt><code>PROJECT</code></dt>
+  <dd>DITA-OT project file</dd>
   <dt><code>OUTPUT</code></dt>
   <dd>Output URL or local directory. Optional</dd>
   <dt><code>API</code></dt>

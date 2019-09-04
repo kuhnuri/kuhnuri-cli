@@ -95,6 +95,9 @@ func main() {
 				deliv = &p.Deliverables[0]
 			}
 		} else {
+			if len(input) == 0 || len(transtype) == 0{
+				cli.ShowAppHelpAndExit(c, 1)
+			}
 			i, err := toUrl(input)
 			if err != nil {
 				return cli.NewExitError("ERROR: "+err.Error(), 1)
@@ -105,13 +108,15 @@ func main() {
 			}
 			deliv = models.NewDeliverable(i.String(), transtype, o.String())
 		}
-		client, err := client.New(conf, deliv)
-		if err != nil {
-			return cli.NewExitError("ERROR: "+err.Error(), 1)
-		}
-		err = client.Execute()
-		if err != nil {
-			return cli.NewExitError("ERROR: "+err.Error(), 1)
+		if deliv != nil {
+			client, err := client.New(conf, deliv)
+			if err != nil {
+				return cli.NewExitError("ERROR: "+err.Error(), 1)
+			}
+			err = client.Execute()
+			if err != nil {
+				return cli.NewExitError("ERROR: "+err.Error(), 1)
+			}
 		}
 		return nil
 	}
