@@ -48,7 +48,7 @@ func New(conf config.Config, deliverable *models.Deliverable) (*Client, error) {
 }
 
 func (c *Client) Execute() error {
-	c.spinner = spinner.New("Running")
+	c.spinner = spinner.New("Starting")
 	defer c.spinner.Stop()
 	var in *url.URL
 	if isLocal(c.input) {
@@ -209,12 +209,15 @@ func (c *Client) await(created *models.Job) error {
 
 	//c.spinner.Message(fmt.Sprintf("Converting %s", id))
 	ticks := time.Tick(5 * time.Second)
+	var prev string
 	for range ticks {
 		job, err := c.getJob(id)
 		if err != nil {
 			return fmt.Errorf("Failed to retrieve state: %v", err)
 		}
 		switch job.Status {
+		case prev:
+			break
 		case "queue":
 			c.spinner.Message(fmt.Sprintf("Queuing"))
 		case "process":
@@ -229,6 +232,7 @@ func (c *Client) await(created *models.Job) error {
 		default:
 			panic(fmt.Sprintf("Illegal state: %s", job.Status))
 		}
+		prev = job.Status
 	}
 	return nil
 }

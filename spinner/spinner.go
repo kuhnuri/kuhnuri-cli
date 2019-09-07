@@ -10,6 +10,12 @@ import (
 	"time"
 )
 
+const SHOW_CURSOR = "\033[?25h"
+const HIDE_CURSOR = "\033[?25l"
+const COLOUR_CLEAR = "\033[0m"
+const COLOUR_GREEN = "\033[32m"
+const COLOUR_BOLD = "\033[1m"
+
 type Logger interface {
 	Message(string)
 	Stop()
@@ -48,12 +54,14 @@ func New(msg string) Logger {
 
 func (s *Spinner) run() {
 	defer s.ticker.Stop()
+	fmt.Print(HIDE_CURSOR)
 	for {
 		select {
 		case <-s.ticker.C:
 			fmt.Printf("\r%s %s%s", s.msg, s.next(), s.clean)
 		case <-s.stop:
 			fmt.Printf("\r%s %s%s\n", s.msg, "✓", s.clean)
+			fmt.Print(SHOW_CURSOR)
 			return
 		}
 	}
@@ -63,7 +71,7 @@ func (s *Spinner) Message(msg string) {
 	if s.msg == msg {
 		return
 	}
-	fmt.Printf("\r%s %s%s\n", s.msg, "✓", s.clean)
+	fmt.Printf("\r%s %s%s%s%s%s\n", s.msg, COLOUR_GREEN, COLOUR_BOLD, "✓", COLOUR_CLEAR, s.clean)
 	diff := len(s.msg) - len(msg)
 	if diff > 0 {
 		s.clean = strings.Repeat(" ", diff)
