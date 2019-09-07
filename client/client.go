@@ -23,7 +23,7 @@ type Client struct {
 	transtype string
 	input     *url.URL
 	output    *url.URL
-	spinner   *spinner.Spinner
+	spinner   spinner.Logger
 }
 
 func New(conf config.Config, deliverable *models.Deliverable) (*Client, error) {

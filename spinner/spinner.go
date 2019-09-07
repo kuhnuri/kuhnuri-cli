@@ -2,9 +2,18 @@ package spinner
 
 import (
 	"fmt"
+	"golang.org/x/crypto/ssh/terminal"
+	"io/ioutil"
+	"log"
+	"os"
 	"strings"
 	"time"
 )
+
+type Logger interface {
+	Message(string)
+	Stop()
+}
 
 type Spinner struct {
 	msg     string
@@ -16,16 +25,25 @@ type Spinner struct {
 	stop    chan bool
 }
 
-func New(msg string) *Spinner {
-	spinner := &Spinner{
-		msg:    msg,
-		states: []string{"⣷", "⣯", "⣟", "⡿", "⢿", "⣻", "⣽", "⣾"},
-		state:  -1,
-		ticker: time.NewTicker(time.Millisecond * 100),
-		stop:   make(chan bool, 1),
+func New(msg string) Logger {
+	if terminal.IsTerminal(int(os.Stdout.Fd())) {
+		log.SetOutput(ioutil.Discard)
+		spinner := &Spinner{
+			msg:    msg,
+			states: []string{"⣷", "⣯", "⣟", "⡿", "⢿", "⣻", "⣽", "⣾"},
+			state:  -1,
+			ticker: time.NewTicker(time.Millisecond * 100),
+			stop:   make(chan bool, 1),
+		}
+		go spinner.run()
+		return spinner
+	} else {
+		spinner := &Terminal{
+			log: log.New(os.Stdout, "", 0),
+		}
+		spinner.Message(msg)
+		return spinner
 	}
-	go spinner.run()
-	return spinner
 }
 
 func (s *Spinner) run() {
@@ -67,4 +85,16 @@ func (s *Spinner) next() string {
 		s.state = i
 	}
 	return s.states[s.state]
+}
+
+type Terminal struct {
+	log *log.Logger
+}
+
+func (s *Terminal) Message(msg string) {
+	s.log.Printf("%s\n", msg)
+}
+
+func (s *Terminal) Stop() {
+	// Noop
 }

@@ -16,7 +16,6 @@ import (
 var conf config.Config
 
 func init() {
-	log.SetOutput(ioutil.Discard)
 	conf = config.Read()
 }
 
