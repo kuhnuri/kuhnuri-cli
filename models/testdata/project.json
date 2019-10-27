@@ -1,0 +1,61 @@
+{
+  "deliverables": [
+    {
+      "name": "Site",
+      "id": "site",
+      "context": {
+        "name": "Site",
+        "id": "site",
+        "input": "jar:https://github.com/dita-ot/docs/archive/develop.zip!/docs-develop/userguide.ditamap",
+        "profiles": {
+          "ditavals": "site.ditaval"
+        }
+      },
+      "output": "./out",
+      "publication": {
+        "transtype": "html5",
+        "id": "site",
+        "name": "Site",
+        "params": [
+          {
+            "name": "args.gen.task.lbl",
+            "value": "YES",
+            "href": null
+          },
+          {
+            "name": "args.rellinks",
+            "value": "noparent",
+            "href": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "Name",
+      "id": "book",
+      "context": {
+        "name": "Book",
+        "id": "book",
+        "input": "jar:https://github.com/dita-ot/docs/archive/develop.zip!/docs-develop/userguide-book.ditamap"
+      },
+      "output": "./out",
+      "publication": {
+        "transtype": "fo2pdf",
+        "id": "book",
+        "name": "Book",
+        "params": [
+          {
+            "name": "args.gen.task.lbl",
+            "value": "YES",
+            "href": null
+          },
+          {
+            "name": "args.rellinks",
+            "value": "noparent",
+            "href": null
+          }
+        ]
+      }
+    }
+  ]
+}

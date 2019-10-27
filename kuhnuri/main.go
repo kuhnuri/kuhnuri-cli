@@ -75,7 +75,7 @@ func main() {
 		if len(api) != 0 {
 			conf["api"] = api
 		}
-		var deliv *models.Deliverable
+		var deliv []*models.Deliverable
 		if len(project) != 0 {
 			p, err := readProject(project)
 			if err != nil {
@@ -84,17 +84,17 @@ func main() {
 			if len(deliverable) != 0 {
 				for _, d := range p.Deliverables {
 					if d.Id == deliverable {
-						deliv = &d
+						deliv = []*models.Deliverable{ &d }
 					}
 					if deliv == nil {
 						return cli.NewExitError("ERROR: deliverable "+deliverable+" not found", 1)
 					}
 				}
 			} else {
-				deliv = &p.Deliverables[0]
+				deliv = &p.Deliverables
 			}
 		} else {
-			if len(input) == 0 || len(transtype) == 0{
+			if len(input) == 0 || len(transtype) == 0 {
 				cli.ShowAppHelpAndExit(c, 1)
 			}
 			i, err := toUrl(input)
